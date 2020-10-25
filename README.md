@@ -14,3 +14,9 @@ Do not forget to pass the `-DBUILD_TESTING=ON` option to CMake to enable unit te
 ### Message Queue
 
 ...
+
+## Resources
+
+https://www.man7.org/linux/man-pages/man2/poll.2.html
+http://www.linuxhowtos.org/C_C++/socket.htm
+https://www.gnu.org/software/libc/manual/html_node/Low_002dLevel-I_002fO.html

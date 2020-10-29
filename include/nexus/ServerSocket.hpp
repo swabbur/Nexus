@@ -20,5 +20,7 @@ public:
 
     [[nodiscard]] int get_descriptor() const;
 
+    [[nodiscard]] bool is_open() const;
+
     [[nodiscard]] Socket accept();
 };

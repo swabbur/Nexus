@@ -45,6 +45,10 @@ int Socket::get_descriptor() const {
     return descriptor;
 }
 
+bool Socket::is_open() const {
+    return descriptor != -1;
+}
+
 std::size_t Socket::read(char * bytes, std::size_t length) { // NOLINT(readability-make-member-function-const)
     std::size_t bytes_read = ::read(descriptor, bytes, length);
     if (bytes_read < 0) {
@@ -53,7 +57,7 @@ std::size_t Socket::read(char * bytes, std::size_t length) { // NOLINT(readabili
     return bytes_read;
 }
 
-std::size_t Socket::write(char * bytes, std::size_t length) { // NOLINT(readability-make-member-function-const)
+std::size_t Socket::write(char const * bytes, std::size_t length) { // NOLINT(readability-make-member-function-const)
     std::size_t bytes_written = ::write(descriptor, bytes, length);
     if (bytes_written < 0) {
         throw std::runtime_error("Could not write to socket");

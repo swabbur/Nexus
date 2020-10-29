@@ -43,6 +43,10 @@ int ServerSocket::get_descriptor() const {
     return descriptor;
 }
 
+bool ServerSocket::is_open() const {
+    return descriptor != -1;
+}
+
 Socket ServerSocket::accept() { // NOLINT(readability-make-member-function-const)
 
     struct sockaddr_in address = {};

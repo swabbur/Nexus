@@ -1,16 +1,11 @@
 #pragma once
 
 #include <functional>
-#include <poll.h>
-#include <vector>
 
 class ServerSocket;
 class Socket;
 
 class Selector {
-
-    std::vector<struct pollfd> pollfds;
-    std::vector<std::function<void()>> callbacks;
 
 public:
 

@@ -4,21 +4,17 @@
 
 class Socket {
 
-    int descriptor;
-
 public:
 
     static Socket connect(std::string const & host, int port);
 
-    explicit Socket(int descriptor);
+    explicit Socket();
 
     Socket(Socket const &) = delete;
 
     Socket(Socket && client) noexcept;
 
     ~Socket();
-
-    [[nodiscard]] int get_descriptor() const;
 
     [[nodiscard]] bool is_open() const;
 

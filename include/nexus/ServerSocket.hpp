@@ -1,22 +1,25 @@
 #pragma once
 
-class Socket;
+#include <any>
 
-class ServerSocket {
+namespace Nexus {
 
-public:
+    class Socket;
 
-    static ServerSocket open(int port);
+    class ServerSocket {
 
-    ServerSocket();
+        std::any handle;
 
-    ServerSocket(ServerSocket const &) = delete;
+    public:
 
-    ServerSocket(ServerSocket && server) noexcept;
+        explicit ServerSocket(std::any  handle);
 
-    ~ServerSocket();
+        ServerSocket(ServerSocket const & server_socket) = delete;
 
-    [[nodiscard]] bool is_open() const;
+        ServerSocket(ServerSocket && server_socket) noexcept;
 
-    [[nodiscard]] Socket accept();
-};
+        ~ServerSocket();
+
+        Socket accept();
+    };
+}

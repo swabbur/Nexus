@@ -1,29 +1,10 @@
 #pragma once
 
-#include <functional>
+namespace Nexus {
 
-class ServerSocket;
-class Socket;
+    class Selector {
 
-class Selector {
+    public:
 
-public:
-
-    Selector();
-
-    Selector(Selector const &) = delete;
-
-    Selector(Selector && selector) noexcept;
-
-    ~Selector();
-
-    void attach(ServerSocket const & server_socket, std::function<void()> const & callback);
-
-    void attach(Socket const & socket, std::function<void()> const & callback);
-
-    void detach(ServerSocket const & server_socket);
-
-    void detach(Socket const & socket);
-
-    void poll();
-};
+    };
+}

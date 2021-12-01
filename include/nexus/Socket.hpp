@@ -1,24 +1,27 @@
 #pragma once
 
-#include <string>
+#include <any>
 
-class Socket {
+namespace Nexus {
 
-public:
+    class Buffer;
 
-    static Socket connect(std::string const & host, int port);
+    class Socket {
 
-    explicit Socket();
+        std::any handle;
 
-    Socket(Socket const &) = delete;
+    public:
 
-    Socket(Socket && client) noexcept;
+        explicit Socket(std::any handle);
 
-    ~Socket();
+        Socket(Socket const & socket) = delete;
 
-    [[nodiscard]] bool is_open() const;
+        Socket(Socket && socket) noexcept;
 
-    [[maybe_unused]] std::size_t read(char * bytes, std::size_t length);
+        ~Socket();
 
-    std::size_t write(char const * bytes, std::size_t length);
-};
+        [[maybe_unused]] std::size_t write(Buffer const & buffer, std::size_t count);
+
+        [[maybe_unused]] std::size_t read(Buffer & buffer, std::size_t count);
+    };
+}

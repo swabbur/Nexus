@@ -1,6 +1,7 @@
 #pragma once
 
 #include <any>
+#include <string>
 
 namespace Nexus {
 
@@ -12,6 +13,8 @@ namespace Nexus {
 
     public:
 
+        static Socket connect(std::string const & host, std::uint16_t port);
+
         explicit Socket(std::any handle);
 
         Socket(Socket const & socket) = delete;
@@ -20,8 +23,8 @@ namespace Nexus {
 
         ~Socket();
 
-        [[maybe_unused]] std::size_t write(Buffer const & buffer, std::size_t count);
+        void write(std::string const & message);
 
-        [[maybe_unused]] std::size_t read(Buffer & buffer, std::size_t count);
+        std::string read();
     };
 }

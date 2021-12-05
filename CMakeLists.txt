@@ -5,10 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCES
         src/nexus/util/Thread.cpp
-        src/nexus/WinSock.cpp
+        src/nexus/Exception.cpp
         src/nexus/Selector.cpp
         src/nexus/ServerSocket.cpp
         src/nexus/Socket.cpp
+        src/nexus/WinSock.cpp
         src/Main.cpp)
 
 find_package(Threads REQUIRED)

@@ -1,7 +1,7 @@
 #include "WinSock.hpp"
 
+#include <nexus/Exception.hpp>
 #include <nexus/ServerSocket.hpp>
-#include <iostream>
 #include <mutex>
 
 namespace WinSock {
@@ -17,13 +17,11 @@ namespace WinSock {
             WSADATA data;
             int started = WSAStartup(version, &data);
             if (started != 0) {
-                std::cerr << "Could not start Windows Sockets (" << started << ')' << std::endl;
-                std::exit(1);
+                throw Nexus::Exception("Could not start Windows Sockets: ", started);
             }
 
             if (LOBYTE(data.wVersion) != 2 || HIBYTE(data.wVersion) != 2) {
-                std::cerr << "Could not find a suitable version of Windows Sockets" << std::endl;
-                std::exit(1);
+                throw Nexus::Exception("Could not find a suitable version of Windows Sockets");
             }
         }
     }
@@ -34,8 +32,7 @@ namespace WinSock {
             int cleaned = WSACleanup();
             if (cleaned == SOCKET_ERROR) {
                 int error = WSAGetLastError();
-                std::cerr << "Could not clean up Windows Sockets (" << error << ')' << std::endl;
-                std::exit(1);
+                throw Nexus::Exception("Could not clean up Windows Sockets: ", error);
             }
         }
     }

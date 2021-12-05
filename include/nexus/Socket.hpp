@@ -9,6 +9,8 @@ namespace Nexus {
 
     class Socket {
 
+        friend class Selector;
+
         std::any handle;
 
     public:

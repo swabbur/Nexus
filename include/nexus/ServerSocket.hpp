@@ -8,6 +8,8 @@ namespace Nexus {
 
     class ServerSocket {
 
+        friend class Selector;
+
         std::any handle;
 
     public:

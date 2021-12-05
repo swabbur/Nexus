@@ -1,8 +1,8 @@
 #include "WinSock.hpp"
 
+#include <nexus/Exception.hpp>
 #include <nexus/Socket.hpp>
 #include <array>
-#include <iostream>
 
 namespace Nexus {
 
@@ -15,8 +15,7 @@ namespace Nexus {
         SOCKET handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (handle == INVALID_SOCKET) {
             int error = WSAGetLastError();
-            std::cerr << "Could not create socket (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not create socket: ", error);
         }
 
         sockaddr_in address = {};
@@ -24,12 +23,10 @@ namespace Nexus {
         address.sin_addr.s_addr = inet_addr(host.c_str()); // inet_pton()
         address.sin_port = htons(port);
 
-
         int connected = ::connect(handle, (SOCKADDR *) &address, sizeof(address));
         if (connected == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            std::cerr << "Could not connect socket (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not connect socket: ", error);
         }
 
         return Socket(handle);
@@ -37,8 +34,7 @@ namespace Nexus {
 
     Socket::Socket(std::any handle) : handle(std::move(handle)) {
         if (handle.type() != typeid(SOCKET)) {
-            std::cerr << "Socket handle must be of type SOCKET" << std::endl;
-            std::exit(1);
+            throw Exception("Socket handle must be of type SOCKET");
         }
     }
 
@@ -52,8 +48,7 @@ namespace Nexus {
             int closed = ::closesocket(std::any_cast<SOCKET>(handle));
             if (closed == SOCKET_ERROR) {
                 int error = WSAGetLastError();
-                std::cerr << "Could not close socket (" << error << ')' << std::endl;
-                std::exit(1);
+                throw Exception("Could not close socket: ", error);
             }
 
             WinSock::shutdown();
@@ -61,21 +56,28 @@ namespace Nexus {
     }
 
     void Socket::write(std::string const & message) {
+
+        // TODO: Properly react to errors: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-send
+
         int bytes_sent = ::send(std::any_cast<SOCKET>(handle), message.c_str(), message.size() + 1, 0);
         if (bytes_sent == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            std::cerr << "Could not send message (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not send message: ", error);
         }
     }
 
     std::string Socket::read() {
 
+        // TODO: Properly react to errors: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recv
+
         int bytes_received = ::recv(std::any_cast<SOCKET>(handle), READ_BUFFER.data(), READ_BUFFER.size(), 0);
         if (bytes_received == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            std::cerr << "Could not receive message (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not receive message: ", error);
+        }
+
+        if (bytes_received == 0) {
+            return "";
         }
 
         return { READ_BUFFER.data() };

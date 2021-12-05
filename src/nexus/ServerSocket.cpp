@@ -1,8 +1,8 @@
 #include "WinSock.hpp"
 
+#include <nexus/Exception.hpp>
 #include <nexus/ServerSocket.hpp>
 #include <nexus/Socket.hpp>
-#include <iostream>
 #include <utility>
 
 namespace Nexus {
@@ -14,8 +14,7 @@ namespace Nexus {
         SOCKET handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (handle == INVALID_SOCKET) {
             int error = WSAGetLastError();
-            std::cerr << "Could not create socket_handle (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not create socket handle", error);
         }
 
         sockaddr_in address = {};
@@ -26,15 +25,13 @@ namespace Nexus {
         int bound = ::bind(handle, (SOCKADDR *)&address, sizeof(address));
         if (bound == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            std::cerr << "Could not bind socket (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not bind socket: ", error);
         }
 
         int listening = ::listen(handle, SOMAXCONN);
         if (listening == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            std::cerr << "Could not listen on socket (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not listen on socket: ", error);
         }
 
         return ServerSocket(handle);
@@ -42,8 +39,7 @@ namespace Nexus {
 
     ServerSocket::ServerSocket(std::any handle) : handle(std::move(handle)) {
         if (handle.type() != typeid(SOCKET)) {
-            std::cerr << "Socket handle must be of type SOCKET" << std::endl;
-            std::exit(1);
+            throw Exception("Socket handle must be of type SOCKET");
         }
     }
 
@@ -57,8 +53,7 @@ namespace Nexus {
             int closed = ::closesocket(std::any_cast<SOCKET>(handle));
             if (closed == SOCKET_ERROR) {
                 int error = WSAGetLastError();
-                std::cerr << "Could not close socket (" << error << ')' << std::endl;
-                std::exit(1);
+                throw Exception("\"Could not close socket: ", error);
             }
 
             WinSock::shutdown();
@@ -72,8 +67,7 @@ namespace Nexus {
         SOCKET client_handle = ::accept(std::any_cast<SOCKET>(handle), nullptr, nullptr);
         if (client_handle == INVALID_SOCKET) {
             int error = WSAGetLastError();
-            std::cerr << "Could not accept socket (" << error << ')' << std::endl;
-            std::exit(1);
+            throw Exception("Could not accept socket: ", error);
         }
 
         return Nexus::Socket(client_handle);

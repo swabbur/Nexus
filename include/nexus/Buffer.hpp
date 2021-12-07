@@ -1,36 +1,87 @@
 #pragma once
 
-#include <queue>
+#include <stdexcept>
+#include <vector>
 
 namespace Nexus {
 
+    template<typename Value>
+    class Codec;
+
     class Buffer {
 
-        std::queue<std::byte> queue;
+        std::size_t const capacity;
+        std::size_t head;
+        std::size_t tail;
+        std::size_t count;
+        std::vector<std::byte> bytes;
 
     public:
 
-        explicit Buffer();
+        explicit Buffer(std::size_t capacity) : capacity(capacity), head(0), tail(0), count(0), bytes(capacity) {}
 
-        std::vector<std::byte> read_all() {
-            std::vector<std::byte> bytes;
-            while (!queue.empty()) {
-                bytes.push_back(queue.front());
-                queue.pop();
+        [[nodiscard]] std::size_t get_size() const {
+            return count;
+        }
+
+        void read(void * data, std::size_t size) {
+
+            if (size > count) {
+                throw std::runtime_error("Insufficient readable memory available");
             }
-            return bytes;
+
+            if (size <= capacity - head) {
+                auto iterator = std::begin(bytes);
+                std::advance(iterator, head);
+                std::copy_n(iterator, size, static_cast<std::byte *>(data));
+            } else {
+
+                auto input_iterator = std::begin(bytes);
+                std::advance(input_iterator, head);
+                std::copy_n(input_iterator, capacity - head, static_cast<std::byte *>(data));
+
+                auto output_iterator = static_cast<std::byte *>(data);
+                std::advance(output_iterator, capacity - head);
+                std::copy_n(std::begin(bytes), size - (capacity - tail), output_iterator);
+            }
+
+            head = (head + size) % capacity;
+            count -= size;
+        }
+
+        void write(void const * data, std::size_t size) {
+
+            if (size > capacity - count) {
+                throw std::runtime_error("Insufficient writable memory available");
+            }
+
+            if (size <= capacity - tail) {
+                auto iterator = std::begin(bytes);
+                std::advance(iterator, tail);
+                std::copy_n(static_cast<std::byte const *>(data), size, iterator);
+            } else {
+
+                auto output_iterator = std::begin(bytes);
+                std::advance(output_iterator, tail);
+                std::copy_n(static_cast<std::byte const *>(data), capacity - tail, output_iterator);
+
+                auto input_iterator = static_cast<std::byte const *>(data);
+                std::advance(input_iterator, capacity - tail);
+                std::copy_n(input_iterator, size - (capacity - tail), std::begin(bytes));
+            }
+
+            tail = (tail + size) % capacity;
+            count += size;
         }
 
         template<typename Value>
-        Value read() {
-            return Codec<Value>::deserialize(queue);
+        Value pop() {
+            return Codec<Value>::deserialize(*this);
         }
 
         template<typename Value>
-        void write(Value const & value) {
-            Codec<Value>::serialize(value, queue);
+        void push(Value const & value) {
+            Codec<Value>::serialize(value, *this);
         }
     };
 }
-
-#include "Codec.hpp"

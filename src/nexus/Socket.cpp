@@ -57,8 +57,10 @@ namespace Nexus {
     }
 
     void Socket::write(Buffer & buffer) {
-        std::vector<std::byte> bytes = buffer.read_all();
-        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), reinterpret_cast<const char *>(bytes.data()), bytes.size() + 1, 0);
+        std::vector<char> bytes;
+        bytes.resize(buffer.get_size());
+        buffer.read(bytes.data(), buffer.get_size());
+        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), bytes.data(), static_cast<int>(bytes.size()), 0);
         if (bytes_sent == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not send message: ", error);
@@ -74,12 +76,9 @@ namespace Nexus {
         }
 
         if (bytes_received == 0) {
-            buffer.write<std::byte>(std::byte(0));
-            return;
+            throw std::runtime_error("Socket closed");
         }
 
-        for (std::size_t index = 0; index < bytes_received; index++) {
-            buffer.write(READ_BUFFER[index]);
-        }
+        buffer.write(READ_BUFFER.data(), bytes_received);
     }
 }

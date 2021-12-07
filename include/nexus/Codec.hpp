@@ -1,34 +1,82 @@
 #pragma once
 
-#include <cstdint>
-#include <queue>
-#include <string>
-#include <vector>
+#include "Buffer.hpp"
+
+#include <array>
+#include <type_traits>
 
 namespace Nexus {
 
     template<typename Value>
-    class Codec;
-
-    template<typename Value>
     class Codec {
+
+        static_assert(std::is_move_constructible_v<Value> && std::is_trivially_copyable_v<Value>,
+                      "The default codec is only guaranteed to work on types that are both move-constructible and trivially "
+                      "copyable");
 
     public:
 
-        static void serialize(Value const & value, std::queue<std::byte> & queue) {
-            auto const * bytes = reinterpret_cast<std::byte const *>(&value);
-            for (std::size_t index = 0; index < sizeof(Value); index++) {
-                queue.push(bytes[index]);
+        static void serialize(Value const & value, Buffer & buffer) {
+            buffer.write(&value, sizeof(Value));
+        }
+
+        static Value deserialize(Buffer & buffer) {
+            std::array<std::byte, sizeof(Value)> bytes = {};
+            buffer.read(bytes.data(), bytes.size());
+            return std::move(*reinterpret_cast<Value *>(bytes.data()));
+        }
+
+        Codec() = delete;
+    };
+
+    template<typename Value, std::size_t SIZE>
+    class Codec<std::array<Value, SIZE>> {
+
+        static_assert(std::is_default_constructible_v<Value> && std::is_move_constructible_v<Value>,
+                      "Array elements must be default-constructible and move-constructible to be deserialized");
+
+    public:
+
+        static void serialize(std::array<Value, SIZE> const & values, Buffer & buffer) {
+            for (Value const & value : values) {
+                Codec<Value>::serialize(value, buffer);
             }
         }
 
-        static Value deserialize(std::queue<std::byte> & queue) {
-            std::byte bytes[sizeof(Value)];
-            for (std::size_t index = 0; index < sizeof(Value); index++) {
-                bytes[index] = queue.front();
-                queue.pop();
+        static std::array<Value, SIZE> deserialize(Buffer & buffer) {
+            std::array<Value, SIZE> values;
+            for (std::size_t index = 0; index < SIZE; index++) {
+                values[index] = Codec<Value>::deserialize(buffer);
             }
-            return *reinterpret_cast<Value *>(bytes);
+            return values;
+        }
+
+        Codec() = delete;
+    };
+
+    template<typename Value>
+    class Codec<std::vector<Value>> {
+
+        static_assert(std::is_move_constructible_v<Value>, "Vector elements must be move-constructible to be deserialized");
+
+    public:
+
+        static void serialize(std::vector<Value> const & values, Buffer & buffer) {
+            Codec<std::size_t>::serialize(values.size(), buffer);
+            for (Value const & value : values) {
+                Codec<Value>::serialize(value, buffer);
+            }
+        }
+
+        static std::vector<Value> deserialize(Buffer & buffer) {
+            std::vector<Value> values;
+            std::size_t size = Codec<std::size_t>::deserialize(buffer);
+            values.reserve(size);
+            for (std::size_t index = 0; index < size; index++) {
+                Value value = Codec<Value>::deserialize(buffer);
+                values.push_back(std::move(value));
+            }
+            return values;
         }
 
         Codec() = delete;
@@ -39,64 +87,16 @@ namespace Nexus {
 
     public:
 
-        static void serialize(std::string const & value, std::queue<std::byte> & queue) {
-            for (char character : value) {
-                queue.push(std::byte(character));
-            }
-            queue.push(std::byte(0));
+        static void serialize(std::string const & value, Buffer & buffer) {
+            buffer.write(value.c_str(), value.size() + 1);
         }
 
-        static std::string deserialize(std::queue<std::byte> & queue) {
+        static std::string deserialize(Buffer & buffer) {
             std::string value;
-            while (queue.front() != std::byte(0)) {
-                value.push_back(std::to_integer<char>(queue.front()));
-                queue.pop();
+            char character;
+            while ((character = Codec<char>::deserialize(buffer)) != '\0') {
+                value += character;
             }
-            queue.pop();
-            return value;
-        }
-
-        Codec() = delete;
-    };
-
-    template<typename Value>
-    class Codec<std::vector<Value>> {
-
-    public:
-
-        static void serialize(std::vector<Value> const & value, std::queue<std::byte> & queue) {
-            Codec<std::size_t>::serialize(value.size(), queue);
-            for (Value const & sub_value : value) {
-                Codec<Value>::serialize(sub_value, queue);
-            }
-        }
-
-        static std::vector<Value> deserialize(std::queue<std::byte> & queue) {
-            std::vector<Value> value;
-            std::size_t size = Codec<std::size_t>::deserialize(queue);
-            value.reserve(size);
-            for (std::size_t index = 0; index < size; index++) {
-                Value sub_value = Codec<Value>::deserialize(queue);
-                value.push_back(std::move(sub_value));
-            }
-            return value;
-        }
-
-        Codec() = delete;
-    };
-
-    template<>
-    class Codec<char> {
-
-    public:
-
-        static void serialize(char const & value, std::queue<std::byte> & queue) {
-            queue.push(std::byte(value));
-        }
-
-        static char deserialize(std::queue<std::byte> & queue) {
-            char value = std::to_integer<char>(queue.front());
-            queue.pop();
             return value;
         }
 

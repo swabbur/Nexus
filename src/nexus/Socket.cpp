@@ -1,5 +1,6 @@
 #include "WinSock.hpp"
 
+#include <nexus/Buffer.hpp>
 #include <nexus/Exception.hpp>
 #include <nexus/Socket.hpp>
 #include <array>
@@ -55,20 +56,16 @@ namespace Nexus {
         }
     }
 
-    void Socket::write(std::string const & message) {
-
-        // TODO: Properly react to errors: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-send
-
-        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), message.c_str(), message.size() + 1, 0);
+    void Socket::write(Buffer & buffer) {
+        std::vector<std::byte> bytes = buffer.read_all();
+        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), reinterpret_cast<const char *>(bytes.data()), bytes.size() + 1, 0);
         if (bytes_sent == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not send message: ", error);
         }
     }
 
-    std::string Socket::read() {
-
-        // TODO: Properly react to errors: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-recv
+    void Socket::read(Buffer & buffer) {
 
         int bytes_received = ::recv(std::any_cast<SOCKET>(handle), READ_BUFFER.data(), READ_BUFFER.size(), 0);
         if (bytes_received == SOCKET_ERROR) {
@@ -77,9 +74,12 @@ namespace Nexus {
         }
 
         if (bytes_received == 0) {
-            return "";
+            buffer.write<std::byte>(std::byte(0));
+            return;
         }
 
-        return { READ_BUFFER.data() };
+        for (std::size_t index = 0; index < bytes_received; index++) {
+            buffer.write(READ_BUFFER[index]);
+        }
     }
 }

@@ -25,8 +25,8 @@ namespace Nexus {
 
         ~Socket();
 
-        void write(std::string const & message);
+        void write(Buffer & buffer);
 
-        std::string read();
+        void read(Buffer & buffer);
     };
 }

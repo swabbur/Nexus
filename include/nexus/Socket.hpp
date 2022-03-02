@@ -25,8 +25,12 @@ namespace Nexus {
 
         ~Socket();
 
-        void write(Buffer & buffer);
+        std::size_t send(void * data, std::size_t size);
 
-        void read(Buffer & buffer);
+        std::size_t receive(void * data, std::size_t size);
+
+        void send(Buffer & buffer);
+
+        void receive(Buffer & buffer);
     };
 }

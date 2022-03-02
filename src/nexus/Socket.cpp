@@ -4,6 +4,7 @@
 #include <nexus/Exception.hpp>
 #include <nexus/Socket.hpp>
 #include <array>
+#include <stdexcept>
 
 namespace Nexus {
 
@@ -56,29 +57,43 @@ namespace Nexus {
         }
     }
 
-    void Socket::write(Buffer & buffer) {
-        std::vector<char> bytes;
-        bytes.resize(buffer.get_size());
-        buffer.read(bytes.data(), buffer.get_size());
-        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), bytes.data(), static_cast<int>(bytes.size()), 0);
+    std::size_t Socket::send(void * data, std::size_t size) {
+        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), static_cast<char const *>(data), static_cast<int>(size), 0);
         if (bytes_sent == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not send message: ", error);
+        } else {
+            return bytes_sent;
         }
     }
 
-    void Socket::read(Buffer & buffer) {
-
-        int bytes_received = ::recv(std::any_cast<SOCKET>(handle), READ_BUFFER.data(), READ_BUFFER.size(), 0);
+    std::size_t Socket::receive(void * data, std::size_t size) {
+        int bytes_received = ::recv(std::any_cast<SOCKET>(handle), static_cast<char *>(data), static_cast<int>(size), 0);
         if (bytes_received == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not receive message: ", error);
-        }
-
-        if (bytes_received == 0) {
+        } else if (bytes_received == 0) {
             throw std::runtime_error("Socket closed");
+        } else {
+            return bytes_received;
         }
+    }
 
-        buffer.write(READ_BUFFER.data(), bytes_received);
+    void Socket::send(Buffer & buffer) {
+        std::size_t bytes_written = send(&buffer.bytes[buffer.head], std::min<>(buffer.count, buffer.capacity - buffer.head));
+        if (bytes_written == buffer.capacity - buffer.head) {
+            bytes_written += send(&buffer.bytes, buffer.count - (buffer.capacity - buffer.head));
+        }
+        buffer.head = (buffer.head + bytes_written) % buffer.capacity;
+        buffer.count -= bytes_written;
+    }
+
+    void Socket::receive(Buffer & buffer) {
+        std::size_t bytes_read = receive(&buffer.bytes[buffer.tail], buffer.capacity - buffer.tail);
+        if (bytes_read == buffer.capacity - buffer.tail) {
+            bytes_read += receive(&buffer.bytes, buffer.head - 1);
+        }
+        buffer.tail = (buffer.tail + bytes_read) % buffer.capacity;
+        buffer.count += bytes_read;
     }
 }

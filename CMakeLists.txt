@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCES
         src/nexus/util/Thread.cpp
+        src/nexus/Buffer.cpp
         src/nexus/Exception.cpp
         src/nexus/Selector.cpp
         src/nexus/ServerSocket.cpp

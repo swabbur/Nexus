@@ -1,4 +1,4 @@
-#include <nexus/util/Thread.hpp>
+#include "nexus/Thread.hpp"
 
 namespace Nexus {
 

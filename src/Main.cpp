@@ -7,8 +7,7 @@
 #include <stdexcept>
 #include <thread>
 
-// TODO: Increase buffer size s.t. no wrap-around is necessary for reading and writing data. This would speed up buffer
-//  use as no copies are required until the move operation of reinterpreted pointers.
+// TODO: Allow bit_casting data stored in the buffer directly to a type, eliminating the intermediate data copy.
 // TODO: Provide sink/flush functions to directly copy data to/from the buffer without additional copy.
 
 int main() {

@@ -23,7 +23,7 @@ namespace Nexus {
 
         Socket(Socket && socket) noexcept;
 
-        ~Socket();
+        ~Socket() noexcept(false);
 
         std::size_t send(void * data, std::size_t size);
 

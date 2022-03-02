@@ -52,7 +52,7 @@ namespace Nexus {
         socket.handle = INVALID_SOCKET;
     }
 
-    Socket::~Socket() {
+    Socket::~Socket() noexcept(false) {
         if (std::any_cast<SOCKET>(handle) != INVALID_SOCKET) {
 
             int closed = ::closesocket(std::any_cast<SOCKET>(handle));

@@ -22,7 +22,7 @@ namespace Nexus {
 
         ServerSocket(ServerSocket && server_socket) noexcept;
 
-        ~ServerSocket();
+        ~ServerSocket() noexcept(false);
 
         Socket accept();
     };

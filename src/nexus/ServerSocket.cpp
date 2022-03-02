@@ -19,8 +19,16 @@ namespace Nexus {
 
         sockaddr_in address = {};
         address.sin_family = AF_INET;
-        address.sin_addr.s_addr = inet_addr("127.0.0.1"); // inet_pton()
         address.sin_port = htons(port);
+
+        int translated = inet_pton(AF_INET, "127.0.0.1", &address.sin_addr);
+        if (translated == 0) {
+            throw Exception("Could not translate host address to an IPv4 address");
+        }
+        if (translated == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            throw Exception("Could not translate host address: ", error);
+        }
 
         int bound = ::bind(handle, (SOCKADDR *)&address, sizeof(address));
         if (bound == SOCKET_ERROR) {

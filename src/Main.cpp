@@ -1,6 +1,5 @@
 #include <nexus/Buffer.hpp>
 #include <nexus/Codec.hpp>
-#include <nexus/Exception.hpp>
 #include <nexus/Selector.hpp>
 #include <nexus/ServerSocket.hpp>
 #include <nexus/Socket.hpp>
@@ -10,18 +9,7 @@
 
 // TODO: Increase buffer size s.t. no wrap-around is necessary for reading and writing data. This would speed up buffer
 //  use as no copies are required until the move operation of reinterpreted pointers.
-
 // TODO: Provide sink/flush functions to directly copy data to/from the buffer without additional copy.
-
-// TODO: Add optional returning try_pop/try_push s.t. they can be used safely from the selector callbacks.
-
-
-
-// !!!!!!!!!!!!!!!!!!!!!!
-// TODO: Use std::bit_cast and std::jthread!
-// !!!!!!!!!!!!!!!!!!!!!!
-
-
 
 int main() {
 

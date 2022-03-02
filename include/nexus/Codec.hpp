@@ -12,8 +12,8 @@ namespace Nexus {
     class Codec {
 
         static_assert(std::is_move_constructible_v<Value> && std::is_trivially_copyable_v<Value>,
-                      "The default codec is only guaranteed to work on types that are both move-constructible and trivially "
-                      "copyable");
+                      "The default codec is only guaranteed to work on types that are both move-constructible and "
+                      "trivially copyable");
 
     public:
 
@@ -24,7 +24,7 @@ namespace Nexus {
         static Value decode(Buffer & buffer) {
             std::array<std::byte, sizeof(Value)> bytes = {};
             buffer.read(bytes.data(), bytes.size());
-            return std::move(*reinterpret_cast<Value *>(bytes.data()));
+            return std::bit_cast<Value>(bytes);
         }
 
         Codec() = delete;

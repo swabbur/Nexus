@@ -31,12 +31,12 @@ namespace Nexus {
 
         template<typename Value>
         Value read() {
-            return Codec<Value>::deserialize(*this);
+            return Codec<Value>::decode(*this);
         }
 
         template<typename Value>
         void write(Value const & value) {
-            Codec<Value>::serialize(value, *this);
+            Codec<Value>::encode(value, *this);
         }
     };
 }

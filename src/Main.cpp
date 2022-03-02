@@ -1,4 +1,3 @@
-#include "nexus/Thread.hpp"
 #include <nexus/Buffer.hpp>
 #include <nexus/Codec.hpp>
 #include <nexus/Exception.hpp>
@@ -7,6 +6,7 @@
 #include <nexus/Socket.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 
 // TODO: Increase buffer size s.t. no wrap-around is necessary for reading and writing data. This would speed up buffer
 //  use as no copies are required until the move operation of reinterpreted pointers.
@@ -25,7 +25,7 @@
 
 int main() {
 
-    Nexus::Thread server_thread([](){
+    std::jthread server_thread([](){
         try {
 
             Nexus::ServerSocket server_socket = Nexus::ServerSocket::open(2302);
@@ -43,7 +43,7 @@ int main() {
         }
     });
 
-    Nexus::Thread client_thread([](){
+    std::jthread client_thread([](){
         try {
 
             Nexus::Buffer buffer(1024);

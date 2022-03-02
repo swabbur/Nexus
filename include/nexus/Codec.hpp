@@ -3,6 +3,7 @@
 #include "Buffer.hpp"
 
 #include <array>
+#include <string>
 #include <type_traits>
 
 namespace Nexus {

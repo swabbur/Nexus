@@ -1,7 +1,7 @@
 #include "WinSock.hpp"
 
-#include <nexus/Exception.hpp>
-#include <nexus/ServerSocket.hpp>
+#include "nexus/Exception.hpp"
+#include "nexus/tcp/ServerSocket.hpp"
 #include <mutex>
 
 namespace WinSock {

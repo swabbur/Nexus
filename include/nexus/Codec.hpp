@@ -3,17 +3,23 @@
 #include "Buffer.hpp"
 
 #include <array>
+#include <concepts>
 #include <string>
 #include <type_traits>
 
 namespace Nexus {
 
     template<typename Value>
-    class Codec {
+    concept TriviallyCopyable = std::is_trivially_copyable_v<Value>;
 
-        static_assert(std::is_move_constructible_v<Value> && std::is_trivially_copyable_v<Value>,
-                      "The default codec is only guaranteed to work on types that are both move-constructible and "
-                      "trivially copyable");
+    template<typename Value>
+    concept Trivial = std::is_trivial_v<Value>;
+
+    template<typename Value>
+    class Codec;
+
+    template<TriviallyCopyable Value>
+    class Codec<Value> {
 
     public:
 
@@ -30,7 +36,7 @@ namespace Nexus {
         Codec() = delete;
     };
 
-    template<typename Value, std::size_t SIZE>
+    template<Trivial Value, std::size_t SIZE>
     class Codec<std::array<Value, SIZE>> {
 
         static_assert(std::is_default_constructible_v<Value> && std::is_move_constructible_v<Value>,
@@ -55,10 +61,8 @@ namespace Nexus {
         Codec() = delete;
     };
 
-    template<typename Value>
-    class Codec<std::vector<Value>> {
-
-        static_assert(std::is_move_constructible_v<Value>, "Vector elements must be move-constructible to be deserialized");
+    template<template <typename, typename ...> typename Container, std::move_constructible Value, typename ... RTA>
+    class Codec<Container<Value, RTA ...>> {
 
     public:
 
@@ -70,8 +74,8 @@ namespace Nexus {
         }
 
         static std::vector<Value> decode(Buffer & buffer) {
-            std::vector<Value> values;
             std::size_t size = Codec<std::size_t>::decode(buffer);
+            std::vector<Value> values;
             values.reserve(size);
             for (std::size_t index = 0; index < size; index++) {
                 Value value = Codec<Value>::decode(buffer);

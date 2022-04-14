@@ -1,8 +1,8 @@
 #include "WinSock.hpp"
 
-#include <nexus/Buffer.hpp>
-#include <nexus/Exception.hpp>
-#include <nexus/Socket.hpp>
+#include "nexus/Buffer.hpp"
+#include "nexus/Exception.hpp"
+#include "nexus/tcp/Socket.hpp"
 #include <array>
 #include <stdexcept>
 

@@ -7,9 +7,9 @@ set(SOURCES
         src/nexus/Buffer.cpp
         src/nexus/Exception.cpp
         src/nexus/Selector.cpp
-        src/nexus/ServerSocket.cpp
-        src/nexus/Socket.cpp
-        src/nexus/WinSock.cpp
+        src/nexus/tcp/ServerSocket.cpp
+        src/nexus/tcp/Socket.cpp
+        src/nexus/tcp/WinSock.cpp
         src/Main.cpp)
 
 find_package(Threads REQUIRED)

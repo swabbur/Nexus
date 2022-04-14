@@ -1,8 +1,8 @@
 #include "WinSock.hpp"
 
-#include <nexus/Exception.hpp>
-#include <nexus/ServerSocket.hpp>
-#include <nexus/Socket.hpp>
+#include "nexus/Exception.hpp"
+#include "nexus/tcp/ServerSocket.hpp"
+#include "nexus/tcp/Socket.hpp"
 #include <utility>
 
 namespace Nexus {

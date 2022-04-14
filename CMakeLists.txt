@@ -1,20 +1,29 @@
 cmake_minimum_required(VERSION 3.13)
 project(Nexus VERSION 1.0.0 LANGUAGES CXX)
 
+# Configure CMake
 set(CMAKE_CXX_STANDARD 20)
 
-set(SOURCES
-        src/nexus/Buffer.cpp
-        src/nexus/Exception.cpp
-        src/nexus/Selector.cpp
-        src/nexus/tcp/ServerSocket.cpp
-        src/nexus/tcp/Socket.cpp
-        src/nexus/tcp/WinSock.cpp
-        src/Main.cpp)
-
+# Find packages
 find_package(Threads REQUIRED)
 
-add_executable(Nexus ${SOURCES})
-target_include_directories(Nexus PUBLIC include)
-target_link_libraries(Nexus Threads::Threads)
+# Find sources
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 
+# Create library
+add_library(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC "include")
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+
+    # Find test packages
+    find_package(Catch2 REQUIRED)
+
+    # Find test sources
+    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/tests/*.cpp")
+
+    # Create test executable
+    add_executable(${PROJECT_NAME}Test ${TEST_SOURCES})
+    target_link_libraries(${PROJECT_NAME}Test ${PROJECT_NAME} Catch2::Catch2 Catch2::Catch2WithMain)
+endif()

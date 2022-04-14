@@ -1,8 +1,8 @@
 # Python
 venv/
 
-# CMake
+# CMake (Ninja)
 cmake-build-debug/
 
-# Jetbrains
+# JetBrains
 .idea/

@@ -16,7 +16,7 @@ namespace Nexus {
 
         static ServerSocket open(std::uint16_t port);
 
-        explicit ServerSocket(std::any  handle);
+        explicit ServerSocket(std::any handle);
 
         ServerSocket(ServerSocket const & server_socket) = delete;
 

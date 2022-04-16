@@ -1,8 +1,8 @@
 #include "WinSock.hpp"
 
 #include "nexus/Exception.hpp"
-#include "nexus/tcp/ServerSocket.hpp"
-#include "nexus/tcp/Socket.hpp"
+#include "nexus/ServerSocket.hpp"
+#include "nexus/Socket.hpp"
 
 namespace Nexus {
 
@@ -82,6 +82,13 @@ namespace Nexus {
         if (client_handle == INVALID_SOCKET) {
             int error = WSAGetLastError();
             throw Exception("Could not accept socket: ", error);
+        }
+
+        u_long mode = 0;
+        int configured = ioctlsocket(client_handle, FIONBIO, &mode);
+        if (configured == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            throw Exception("Could not configure socket to be non-blocking: ", error);
         }
 
         return Nexus::Socket(client_handle);

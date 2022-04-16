@@ -1,4 +1,4 @@
-#include "tcp/WinSock.hpp"
+#include "WinSock.hpp"
 
 #include <nexus/Exception.hpp>
 

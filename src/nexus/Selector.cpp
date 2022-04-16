@@ -1,9 +1,9 @@
-#include "tcp/WinSock.hpp"
+#include "WinSock.hpp"
 #include "nexus/Exception.hpp"
 
 #include <nexus/Selector.hpp>
-#include "nexus/tcp/ServerSocket.hpp"
-#include "nexus/tcp/Socket.hpp"
+#include "nexus/ServerSocket.hpp"
+#include "nexus/Socket.hpp"
 
 // TODO: Implement selector according to:
 //  https://renenyffenegger.ch/notes/development/languages/C-C-plus-plus/Socket_cpp/index

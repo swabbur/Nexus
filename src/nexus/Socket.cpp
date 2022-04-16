@@ -1,7 +1,7 @@
 #include "WinSock.hpp"
 
 #include "nexus/Exception.hpp"
-#include "nexus/tcp/Socket.hpp"
+#include "nexus/Socket.hpp"
 #include <stdexcept>
 
 namespace Nexus {
@@ -35,12 +35,12 @@ namespace Nexus {
             throw Exception("Could not connect socket: ", error);
         }
 
-//        u_long mode = 0;
-//        int configured = ioctlsocket(handle, FIONBIO, &mode);
-//        if (configured == SOCKET_ERROR) {
-//            int error = WSAGetLastError();
-//            throw Exception("Could not configure socket to be non-blocking: ", error);
-//        }
+        u_long mode = 0;
+        int configured = ioctlsocket(handle, FIONBIO, &mode);
+        if (configured == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            throw Exception("Could not configure socket to be non-blocking: ", error);
+        }
 
         return Socket(handle);
     }

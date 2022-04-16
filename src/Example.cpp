@@ -1,5 +1,5 @@
-#include <nexus/tcp/ServerSocket.hpp>
-#include <nexus/tcp/Socket.hpp>
+#include "nexus/ServerSocket.hpp"
+#include "nexus/Socket.hpp"
 #include <nexus/Selector.hpp>
 #include <iostream>
 
@@ -8,14 +8,19 @@
 void server() {
     try {
 
-        auto server_socket = Nexus::ServerSocket::open(2302);
 
         std::atomic_bool running = true;
         Nexus::Selector selector;
+
+        auto server_socket = Nexus::ServerSocket::open(2302);
         selector.attach(server_socket, [&server_socket, &running]() {
-            std::cout << "Callback activated" << std::endl;
+
             auto client_socket = server_socket.accept();
-            std::cout << "Client accepted" << std::endl;
+
+            char message[6];
+            client_socket.receive(message, 6);
+            client_socket.send(message, 6);
+
             running = false;
         });
 
@@ -30,7 +35,15 @@ void server() {
 
 void client() {
     try {
+
         auto socket = Nexus::Socket::connect("127.0.0.1", 2302);
+
+        socket.send((void *)"Hello", 6);
+
+        char message[6];
+        socket.receive(message, 6);
+        std::cout << message << std::endl;
+
     } catch (std::exception const & exception) {
         std::cerr << exception.what() << std::endl;
     }

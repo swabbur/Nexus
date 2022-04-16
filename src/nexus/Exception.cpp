@@ -15,11 +15,6 @@ namespace Nexus {
         return "An unknown error occurred.";
     }
 
-    static std::string get_latest_message() {
-        int code = WSAGetLastError();
-        return get_message(code);
-    }
-
     Exception::Exception(std::string const & message) : std::exception(message.c_str()) {}
 
     Exception::Exception(std::string const & prefix, int code) : Exception(prefix + get_message(code)) {}

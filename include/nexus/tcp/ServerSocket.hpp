@@ -1,6 +1,6 @@
 #pragma once
 
-#include <any>
+#include "../Handle.hpp"
 
 namespace Nexus {
 
@@ -8,21 +8,21 @@ namespace Nexus {
 
     class ServerSocket {
 
-        friend class Selector;
-
-        std::any handle;
+        Handle handle;
 
     public:
 
-        static ServerSocket open(std::uint16_t port);
+        [[nodiscard]] static ServerSocket open(std::uint16_t port);
 
-        explicit ServerSocket(std::any handle);
+        [[nodiscard]] explicit ServerSocket(Handle handle) noexcept;
 
         ServerSocket(ServerSocket const & server_socket) = delete;
 
         ServerSocket(ServerSocket && server_socket) noexcept;
 
         ~ServerSocket() noexcept(false);
+
+        [[nodiscard]] Handle get_handle() const noexcept;
 
         Socket accept();
     };

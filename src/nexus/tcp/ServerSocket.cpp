@@ -3,7 +3,6 @@
 #include "nexus/Exception.hpp"
 #include "nexus/tcp/ServerSocket.hpp"
 #include "nexus/tcp/Socket.hpp"
-#include <utility>
 
 namespace Nexus {
 
@@ -42,23 +41,26 @@ namespace Nexus {
             throw Exception("Could not listen on socket: ", error);
         }
 
+        u_long mode = 0;
+        int changed = ioctlsocket(handle, FIONBIO, &mode);
+        if (changed == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            throw Exception("Could not configure server socket to be non-blocking: ", error);
+        }
+
         return ServerSocket(handle);
     }
 
-    ServerSocket::ServerSocket(std::any handle) : handle(std::move(handle)) {
-        if (handle.type() != typeid(SOCKET)) {
-            throw Exception("Socket handle must be of type SOCKET");
-        }
-    }
+    ServerSocket::ServerSocket(Handle handle) noexcept : handle(handle) {}
 
-    ServerSocket::ServerSocket(ServerSocket && server_socket) noexcept : handle(std::move(server_socket.handle)) {
+    ServerSocket::ServerSocket(ServerSocket && server_socket) noexcept : handle(server_socket.handle) {
         server_socket.handle = INVALID_SOCKET;
     }
 
     ServerSocket::~ServerSocket() noexcept(false) {
-        if (std::any_cast<SOCKET>(handle) != INVALID_SOCKET) {
+        if (handle != INVALID_SOCKET) {
 
-            int closed = ::closesocket(std::any_cast<SOCKET>(handle));
+            int closed = ::closesocket(handle);
             if (closed == SOCKET_ERROR) {
                 int error = WSAGetLastError();
                 throw Exception("\"Could not close socket: ", error);
@@ -68,11 +70,15 @@ namespace Nexus {
         }
     }
 
-    Socket ServerSocket::accept() {
+    Handle ServerSocket::get_handle() const noexcept {
+        return handle;
+    }
+
+    Socket ServerSocket::accept() { // NOLINT(readability-make-member-function-const)
 
         WinSock::init();
 
-        SOCKET client_handle = ::accept(std::any_cast<SOCKET>(handle), nullptr, nullptr);
+        SOCKET client_handle = ::accept(handle, nullptr, nullptr);
         if (client_handle == INVALID_SOCKET) {
             int error = WSAGetLastError();
             throw Exception("Could not accept socket: ", error);

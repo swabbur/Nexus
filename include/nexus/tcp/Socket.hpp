@@ -1,23 +1,23 @@
 #pragma once
 
-#include <any>
+#include "../Handle.hpp"
+
 #include <string>
+
+// TODO: Consider separating opening and connecting a socket (s.t. a socket can be reused and reconnected).
+// TODO: Track the current socket state (OPEN, CONNECTED, CLOSED).
 
 namespace Nexus {
 
-    class Buffer;
-
     class Socket {
 
-        friend class Selector;
-
-        std::any handle;
+        Handle handle;
 
     public:
 
-        static Socket connect(std::string const & host, std::uint16_t port);
+        [[nodiscard]] static Socket connect(std::string const & host, std::uint16_t port);
 
-        explicit Socket(std::any handle);
+        [[nodiscard]] explicit Socket(Handle handle) noexcept;
 
         Socket(Socket const & socket) = delete;
 
@@ -25,12 +25,10 @@ namespace Nexus {
 
         ~Socket() noexcept(false);
 
+        [[nodiscard]] Handle get_handle() const noexcept;
+
         std::size_t send(void * data, std::size_t size);
 
         std::size_t receive(void * data, std::size_t size);
-
-        void send(Buffer & buffer);
-
-        void receive(Buffer & buffer);
     };
 }

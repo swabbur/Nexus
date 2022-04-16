@@ -1,14 +1,10 @@
 #include "WinSock.hpp"
 
-#include "nexus/Buffer.hpp"
 #include "nexus/Exception.hpp"
 #include "nexus/tcp/Socket.hpp"
-#include <array>
 #include <stdexcept>
 
 namespace Nexus {
-
-    static thread_local std::array<char, 1024> READ_BUFFER;
 
     Socket Socket::connect(std::string const & host, std::uint16_t port) {
 
@@ -39,23 +35,26 @@ namespace Nexus {
             throw Exception("Could not connect socket: ", error);
         }
 
+//        u_long mode = 0;
+//        int configured = ioctlsocket(handle, FIONBIO, &mode);
+//        if (configured == SOCKET_ERROR) {
+//            int error = WSAGetLastError();
+//            throw Exception("Could not configure socket to be non-blocking: ", error);
+//        }
+
         return Socket(handle);
     }
 
-    Socket::Socket(std::any handle) : handle(std::move(handle)) {
-        if (handle.type() != typeid(SOCKET)) {
-            throw Exception("Socket handle must be of type SOCKET");
-        }
-    }
+    Socket::Socket(Handle handle) noexcept : handle(handle) {}
 
-    Socket::Socket(Socket && socket) noexcept : handle(std::move(socket.handle)) {
+    Socket::Socket(Socket && socket) noexcept : handle(socket.handle) {
         socket.handle = INVALID_SOCKET;
     }
 
     Socket::~Socket() noexcept(false) {
-        if (std::any_cast<SOCKET>(handle) != INVALID_SOCKET) {
+        if (handle != INVALID_SOCKET) {
 
-            int closed = ::closesocket(std::any_cast<SOCKET>(handle));
+            int closed = ::closesocket(handle);
             if (closed == SOCKET_ERROR) {
                 int error = WSAGetLastError();
                 throw Exception("Could not close socket: ", error);
@@ -65,8 +64,12 @@ namespace Nexus {
         }
     }
 
-    std::size_t Socket::send(void * data, std::size_t size) {
-        int bytes_sent = ::send(std::any_cast<SOCKET>(handle), static_cast<char const *>(data), static_cast<int>(size), 0);
+    Handle Socket::get_handle() const noexcept {
+        return handle;
+    }
+
+    std::size_t Socket::send(void * data, std::size_t size) { // NOLINT(readability-make-member-function-const)
+        int bytes_sent = ::send(handle, static_cast<char const *>(data), static_cast<int>(size), 0);
         if (bytes_sent == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not send message: ", error);
@@ -75,8 +78,8 @@ namespace Nexus {
         }
     }
 
-    std::size_t Socket::receive(void * data, std::size_t size) {
-        int bytes_received = ::recv(std::any_cast<SOCKET>(handle), static_cast<char *>(data), static_cast<int>(size), 0);
+    std::size_t Socket::receive(void * data, std::size_t size) { // NOLINT(readability-make-member-function-const)
+        int bytes_received = ::recv(handle, static_cast<char *>(data), static_cast<int>(size), 0);
         if (bytes_received == SOCKET_ERROR) {
             int error = WSAGetLastError();
             throw Exception("Could not receive message: ", error);
@@ -85,23 +88,5 @@ namespace Nexus {
         } else {
             return bytes_received;
         }
-    }
-
-    void Socket::send(Buffer & buffer) {
-        std::size_t bytes_written = send(&buffer.bytes[buffer.head], std::min<>(buffer.count, buffer.capacity - buffer.head));
-        if (bytes_written == buffer.capacity - buffer.head) {
-            bytes_written += send(&buffer.bytes, buffer.count - (buffer.capacity - buffer.head));
-        }
-        buffer.head = (buffer.head + bytes_written) % buffer.capacity;
-        buffer.count -= bytes_written;
-    }
-
-    void Socket::receive(Buffer & buffer) {
-        std::size_t bytes_read = receive(&buffer.bytes[buffer.tail], buffer.capacity - buffer.tail);
-        if (bytes_read == buffer.capacity - buffer.tail) {
-            bytes_read += receive(&buffer.bytes, buffer.head - 1);
-        }
-        buffer.tail = (buffer.tail + bytes_read) % buffer.capacity;
-        buffer.count += bytes_read;
     }
 }

@@ -16,20 +16,24 @@ namespace Nexus {
 
     Selector::~Selector() = default;
 
-    void Selector::attach(ServerSocket const & server_socket, std::function<void()> accept_callback) {
-        accept_callbacks[&server_socket] = std::move(accept_callback);
+    void Selector::attach(ServerSocket const & server_socket, const std::function<void()>& accept_callback) {
+        auto handle = server_socket.get_handle();
+        accept_callbacks[handle] = accept_callback;
     }
 
-    void Selector::attach(Socket const & socket, std::function<void()> read_callback) {
-        read_callbacks[&socket] = std::move(read_callback);
+    void Selector::attach(Socket const & socket, std::function<void()> const & read_callback) {
+        auto handle = socket.get_handle();
+        read_callbacks[handle] = read_callback;
     }
 
     void Selector::detach(ServerSocket const & server_socket) {
-        accept_callbacks.erase(&server_socket);
+        auto handle = server_socket.get_handle();
+        accept_callbacks.erase(handle);
     }
 
     void Selector::detach(Socket const & socket) {
-        read_callbacks.erase(&socket);
+        auto handle = socket.get_handle();
+        read_callbacks.erase(handle);
     }
 
     void Selector::poll() {
@@ -38,12 +42,12 @@ namespace Nexus {
         {
             FD_ZERO(&file_descriptors);
 
-            for (auto const & [server_socket_pointer, accept_callback] : accept_callbacks) {
-                FD_SET(std::any_cast<SOCKET>(server_socket_pointer->handle), &file_descriptors);
+            for (auto const & [handle, accept_callback] : accept_callbacks) {
+                FD_SET(handle, &file_descriptors);
             }
 
-            for (auto const & [socket_pointer, read_callback] : read_callbacks) {
-                FD_SET(std::any_cast<SOCKET>(socket_pointer->handle), &file_descriptors);
+            for (auto const & [handle, read_callback] : read_callbacks) {
+                FD_SET(handle, &file_descriptors);
             }
         }
         lock.unlock();
@@ -54,14 +58,14 @@ namespace Nexus {
             throw Exception("Could not select socket: ", error);
         }
 
-        for (auto const & [server_socket_pointer, accept_callback] : accept_callbacks) {
-            if (FD_ISSET(std::any_cast<SOCKET>(server_socket_pointer->handle), &file_descriptors)) {
+        for (auto const & [handle, accept_callback] : accept_callbacks) {
+            if (FD_ISSET(handle, &file_descriptors)) {
                accept_callback();
             }
         }
 
-        for (auto const & [socket_pointer, read_callback] : read_callbacks) {
-            if (FD_ISSET(std::any_cast<SOCKET>(socket_pointer->handle), &file_descriptors)) {
+        for (auto const & [handle, read_callback] : read_callbacks) {
+            if (FD_ISSET(handle, &file_descriptors)) {
                 read_callback();
             }
         }

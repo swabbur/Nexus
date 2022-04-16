@@ -14,7 +14,13 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp
 add_library(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 
-# Check if tests should be build
+option(BUILD_EXAMPLES "Build examples" OFF)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_EXAMPLES)
+    # Create example executable
+    add_executable(${PROJECT_NAME}Example src/Example.cpp)
+    target_link_libraries(${PROJECT_NAME}Example ${PROJECT_NAME})
+endif()
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 
     # Find test packages

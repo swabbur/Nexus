@@ -84,7 +84,7 @@ namespace Nexus {
             int error = WSAGetLastError();
             throw Exception("Could not receive message: ", error);
         } else if (bytes_received == 0) {
-            throw std::runtime_error("Socket closed");
+            throw Exception("Socket closed");
         } else {
             return bytes_received;
         }

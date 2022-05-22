@@ -11,6 +11,6 @@ namespace Nexus {
 
         explicit Exception(std::string const & message);
 
-        explicit Exception(std::string const & prefix, int code);
+        explicit Exception(std::string const & prefix, std::int32_t code);
     };
 }
